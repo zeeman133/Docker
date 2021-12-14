@@ -1,0 +1,56 @@
+version: '3.1'
+
+services:
+        
+  database:
+     image: postgres:12.9
+     container_name: database
+     restart: always
+     environment:
+      - POSTGRES_PASSWORD=django
+      - POSTGRES_USER=django
+      - POSTGRES_DB=django
+     healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5      
+     volumes:
+      - /opt/pg-db:/var/lib/postgresql/data
+     ports:
+      - 5432:5432
+     networks:
+      - backend
+        
+  backend:
+     build:
+        context: backend
+        dockerfile: Dockerfile 
+     container_name: backend    
+     restart: always
+     ports:
+      - 8000:8000       
+     networks:
+      - backend  
+     depends_on:
+      - database
+
+  frontend:
+     build:
+        context: frontend
+        dockerfile: Dockerfile
+     stdin_open: true
+     tty: true      
+     container_name: frontend
+     restart: always
+     ports:
+      - 3000:3000
+     networks:
+      - backend
+     depends_on:
+      - backend       
+
+networks:
+  backend:
+    driver: bridge
+
